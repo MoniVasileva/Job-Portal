@@ -1,6 +1,6 @@
 package com.vasmoni.jobportal.entity;
 
-public interface RecruiterJobs {
+public interface IRecruiterJobs {
 
 
     Long getTotalCandidates();

@@ -55,9 +55,9 @@ public class WebSecurityConfig {
                     logout.logoutUrl("/logout");
                     logout.logoutSuccessUrl("/");
                     logout.deleteCookies("JSESSIONID");
-                });
-
-        http.rememberMe(rememberMe -> rememberMe.key("uniqueAndSecret").tokenValiditySeconds(86400));
+                })
+                .rememberMe(rememberMe ->
+                rememberMe.key("uniqueAndSecret").tokenValiditySeconds(86400));
 
         return http.build();
     }
