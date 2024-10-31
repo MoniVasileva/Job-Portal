@@ -19,7 +19,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOError;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -65,13 +64,14 @@ public class JobSeekerProfileController {
     public String addNew(JobSeekerProfile jobSeekerProfile,
                          @RequestParam("image") MultipartFile image,
                          @RequestParam("pdf") MultipartFile pdf, Model model) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Authentication authentication = SecurityContextHolder.getContext()
+                .getAuthentication();
+
         if (!(authentication instanceof AnonymousAuthenticationToken)) {
             Users user = usersRepository.findByEmail(authentication.getName())
                     .orElseThrow(() -> new UsernameNotFoundException("User not found"));
             jobSeekerProfile.setUserId(user);
             jobSeekerProfile.setUserAccountId(user.getUserId());
-
         }
         List<Skills> skillsList = new ArrayList<>();
 
@@ -96,7 +96,7 @@ public class JobSeekerProfileController {
         JobSeekerProfile seekerProfile = jobSeekerProfileService.addNew(jobSeekerProfile);
 
         try {
-            String upload = "photos/candidate/" + jobSeekerProfile.getUserAccountId();
+            String upload = "photos/candidate/" + seekerProfile.getUserAccountId();
             if (!Objects.equals(image.getOriginalFilename(), "")) {
                 FileUploadUtil.saveFIle(upload, imageName, image);
             }
