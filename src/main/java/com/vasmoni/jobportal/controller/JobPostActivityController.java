@@ -6,6 +6,7 @@ import com.vasmoni.jobportal.service.JobSeekerApplyService;
 import com.vasmoni.jobportal.service.JobSeekerSaveService;
 import com.vasmoni.jobportal.service.UsersService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -17,12 +18,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Controller
 public class JobPostActivityController {
@@ -56,20 +55,7 @@ public class JobPostActivityController {
 
     ) {
 
-        model.addAttribute("partTime", Objects.equals(partTime, "Part-Time"));
-        model.addAttribute("fullTime", Objects.equals(partTime, "Full-Time"));
-        model.addAttribute("freelance", Objects.equals(partTime, "Freelance"));
-
-        model.addAttribute("remoteOnly", Objects.equals(partTime, "Remote-Only"));
-        model.addAttribute("officeOnly", Objects.equals(partTime, "Office-Only"));
-        model.addAttribute("partialRemote", Objects.equals(partTime, "Partial-Remote"));
-
-        model.addAttribute("today", today);
-        model.addAttribute("days7", days7);
-        model.addAttribute("days30", days30);
-
-        model.addAttribute("job", job);
-        model.addAttribute("location", location);
+        setModelAttributes(model, partTime, fullTime, freelance, remoteOnly, officeOnly, partialRemote, today, days7, days30, job, location);
 
         LocalDate searchDate = null;
         List<JobPostActivity> jobPost = null;
@@ -77,7 +63,7 @@ public class JobPostActivityController {
         boolean remote = true;
         boolean type = true;
 
-        if (days30) {
+        if (days30) {// TODO as other method
             searchDate = LocalDate.now().minusDays(30);
         } else if (days7) {
             searchDate = LocalDate.now().minusDays(7);
@@ -88,7 +74,7 @@ public class JobPostActivityController {
         }
 
         if (partTime == null && fullTime == null && freelance == null) {
-            partTime = "Part-Time";
+            partTime = "Part-Time";//todo as lower method
             fullTime = "Full-Time";
             freelance = "Freelance";
             remote = false;
@@ -123,6 +109,15 @@ public class JobPostActivityController {
 
                 boolean exist;
                 boolean saved;
+
+//                jobPost.forEach(jobActivity -> {
+//                    Optional<JobSeekerApply> jobApply = jobSeekerApplyList.stream().filter(apply ->
+//                            apply.getJob().getJobPostId().equals(jobActivity.getJobPostId())).findFirst();
+//                    jobActivity.setIsActive(jobApply.isPresent());
+//
+//                    Optional<JobSeekerSave> jobSave = jobSeekerSaveList.stream().filter(apply ->
+//                            apply.getJob().getJobPostId().equals(jobActivity.getJobPostId())).findFirst();
+//                    jobActivity.setIsSaved(jobSave.isPresent());
 
                 for (JobPostActivity jobActivity : jobPost) {
                     exist = false;
@@ -175,23 +170,10 @@ public class JobPostActivityController {
                                @RequestParam(value = "days7", required = false) boolean days7,
                                @RequestParam(value = "days30", required = false) boolean days30) {
 
-        model.addAttribute("partTime", Objects.equals(partTime, "Part-Time"));
-        model.addAttribute("fullTime", Objects.equals(partTime, "Full-Time"));
-        model.addAttribute("freelance", Objects.equals(partTime, "Freelance"));
-
-        model.addAttribute("remoteOnly", Objects.equals(partTime, "Remote-Only"));
-        model.addAttribute("officeOnly", Objects.equals(partTime, "Office-Only"));
-        model.addAttribute("partialRemote", Objects.equals(partTime, "Partial-Remote"));
-
-        model.addAttribute("today", today);
-        model.addAttribute("days7", days7);
-        model.addAttribute("days30", days30);
-
-        model.addAttribute("job", job);
-        model.addAttribute("location", location);
+        setModelAttributes(model, partTime, fullTime, freelance, remoteOnly, officeOnly, partialRemote, today, days7, days30, job, location);
 
         LocalDate searchDate = null;
-        List<JobPostActivity> jobPost = null;
+        List<JobPostActivity> jobPost;
         boolean dateSearchFlag = true;
         boolean remote = true;
         boolean type = true;
@@ -212,7 +194,9 @@ public class JobPostActivityController {
             freelance = "Freelance";
             remote = false;
         }
-
+      /*  Objects.requireNonNullElse(partTime,"Part-Time");
+        Objects.requireNonNullElse();//TODO Refactor
+*/
         if (officeOnly == null && remoteOnly == null && partialRemote == null) {
             officeOnly = "Office-Only";
             remoteOnly = "Remote-Only";
@@ -229,6 +213,22 @@ public class JobPostActivityController {
 
         model.addAttribute("jobPost", jobPost);
         return "global-search";
+    }
+
+    private void setModelAttributes(Model model, String partTime, String fullTime, String freelance,
+                                    String remoteOnly, String officeOnly, String partialRemote,
+                                    boolean today, boolean days7, boolean days30, String job, String location) {
+        model.addAttribute("partTime", "Part-Time".equals(partTime));
+        model.addAttribute("fullTime", "Full-Time".equals(fullTime));
+        model.addAttribute("freelance", "Freelance".equals(freelance));
+        model.addAttribute("remoteOnly", "Remote-Only".equals(remoteOnly));
+        model.addAttribute("officeOnly", "Office-Only".equals(officeOnly));
+        model.addAttribute("partialRemote", "Partial-Remote".equals(partialRemote));
+        model.addAttribute("today", today);
+        model.addAttribute("days7", days7);
+        model.addAttribute("days30", days30);
+        model.addAttribute("job", job);
+        model.addAttribute("location", location);
     }
 
     @GetMapping("/dashboard/add")
@@ -251,7 +251,7 @@ public class JobPostActivityController {
         return "redirect:/dashboard/";
     }
 
-    @GetMapping("dashboard/edit/{id}")
+    @PostMapping("dashboard/edit/{id}")
     public String editJob(@PathVariable("id") int id, Model model) {
 
         JobPostActivity jobPostActivity = jobPostActivityService.getOne(id);
@@ -259,6 +259,14 @@ public class JobPostActivityController {
         model.addAttribute("user", usersService.getCurrentUserProfile());
         return "add-jobs";
     }
+
+    @PostMapping("dashboard/deleteJob/{id}")
+    public String deleteJob(@PathVariable("id") Integer jobId, RedirectAttributes redirectAttributes) {
+      jobPostActivityService.deleteById(jobId);
+
+        return "redirect:/dashboard/";
+    }
+
 }
 
 

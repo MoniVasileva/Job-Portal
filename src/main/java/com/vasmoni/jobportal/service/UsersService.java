@@ -1,9 +1,11 @@
 package com.vasmoni.jobportal.service;
 
 import com.vasmoni.jobportal.entity.JobSeekerProfile;
+import com.vasmoni.jobportal.entity.PasswordResetToken;
 import com.vasmoni.jobportal.entity.RecruiterProfile;
 import com.vasmoni.jobportal.entity.Users;
 import com.vasmoni.jobportal.repository.JobSeekerProfileRepository;
+import com.vasmoni.jobportal.repository.PasswordResetTokenRepository;
 import com.vasmoni.jobportal.repository.RecruiterProfileRepository;
 import com.vasmoni.jobportal.repository.UsersRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,13 +27,15 @@ public class UsersService {
     private final JobSeekerProfileRepository jobSeekerProfileRepository;
     private final RecruiterProfileRepository recruiterProfileRepository;
     private final PasswordEncoder passwordEncoder;
+    private final PasswordResetTokenRepository passwordTokenRepository;
 
     @Autowired
-    public UsersService(UsersRepository usersRepository, JobSeekerProfileRepository jobSeekerProfileRepository, RecruiterProfileRepository recruiterProfileRepository, PasswordEncoder passwordEncoder) {
+    public UsersService(UsersRepository usersRepository, JobSeekerProfileRepository jobSeekerProfileRepository, RecruiterProfileRepository recruiterProfileRepository, PasswordEncoder passwordEncoder, PasswordResetTokenRepository passwordTokenRepository) {
         this.usersRepository = usersRepository;
         this.jobSeekerProfileRepository = jobSeekerProfileRepository;
         this.recruiterProfileRepository = recruiterProfileRepository;
         this.passwordEncoder = passwordEncoder;
+        this.passwordTokenRepository = passwordTokenRepository;
     }
 
     public Users addNew(Users users) {
@@ -85,6 +89,21 @@ public class UsersService {
     public Users findByEmail(String currentUsername) {
         return usersRepository.findByEmail(currentUsername)
                 .orElseThrow(()->new UsernameNotFoundException("User not found: "+ currentUsername));
+    }
+
+    public void createPasswordResetTokenForUser(Users user, String token) {
+        PasswordResetToken myToken = new PasswordResetToken(token, user);
+        passwordTokenRepository.save(myToken);
+    }
+    public void changeUserPassword(Users user, String password) {
+        user.setPassword(passwordEncoder.encode(password));
+        usersRepository.save(user);
+    }
+    public PasswordResetToken getPasswordResetToken(final String token) {
+        return passwordTokenRepository.findByToken(token);
+    }
+    public Optional<Users> getUserByPasswordResetToken(final String token) {
+        return Optional.ofNullable(passwordTokenRepository.findByToken(token) .getUser());
     }
 }
 

@@ -26,11 +26,11 @@ public class JobPostActivityService {
     }
 
     public List<RecruiterJobsDto> getRecruiterJobs(int recruiter) {
-        List<RecruiterJobs> recruiterJobsDtos = jobPostActivityRepository.gerRecruiterJobs(recruiter);
+        List<IRecruiterJobs> recruiterJobsDtos = jobPostActivityRepository.gerRecruiterJobs(recruiter);
 
         List<RecruiterJobsDto> recruiterJobsDtoList = new ArrayList<>();
 
-        for (RecruiterJobs rec : recruiterJobsDtos) {
+        for (IRecruiterJobs rec : recruiterJobsDtos) {
             JobLocation loc = new JobLocation(rec.getLocationId(), rec.getCity(), rec.getState(), rec.getCountry());
             JobCompany comp = new JobCompany(rec.getCompanyId(), rec.getName(), "");
             recruiterJobsDtoList.add(new RecruiterJobsDto(rec.getTotalCandidates(), rec.getJob_post_id(),
@@ -51,5 +51,9 @@ public class JobPostActivityService {
                                         List<String> remote, LocalDate searchDate) {
         return Objects.isNull(searchDate) ? jobPostActivityRepository.searchWithoutDate(job, location, remote, type) :
                 jobPostActivityRepository.search(job, location, remote, type, searchDate);
+    }
+
+    public void deleteById(Integer id) {
+        jobPostActivityRepository.deleteById(id);
     }
 }
